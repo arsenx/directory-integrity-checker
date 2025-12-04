@@ -6,11 +6,11 @@ let package = Package(
     platforms: [
         .macOS(.v12),
     ],
-    dependencies: [
-        .package(url: "https://github.com/apple/swift-crypto.git", from: "3.5.0")
-    ],
     products: [
         .executable(name: "dincheck", targets: ["dincheck"]),
+    ],
+    dependencies: [
+        .package(url: "https://github.com/apple/swift-crypto.git", from: "3.5.0")
     ],
     targets: [
         .executableTarget(
