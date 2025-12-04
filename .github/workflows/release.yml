@@ -10,6 +10,8 @@ jobs:
   build:
     name: Build (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    env:
+      SWIFT_VERSION: "5.9.2"
     strategy:
       fail-fast: false
       matrix:
@@ -19,10 +21,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Swift
-        uses: swift-actions/setup-swift@v1
-        with:
-          swift-version: '5.8'
+      - name: Install Swift (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y clang libicu-dev libcurl4-openssl-dev libbsd-dev libatomic1 libsqlite3-dev libpython3-dev tzdata
+          SWIFT_URL="https://download.swift.org/swift-${SWIFT_VERSION}-release/ubuntu22.04/swift-${SWIFT_VERSION}-RELEASE-ubuntu22.04.tar.gz"
+          curl -fL "$SWIFT_URL" -o swift.tar.gz
+          tar xzf swift.tar.gz
+          echo "$PWD/swift-${SWIFT_VERSION}-RELEASE-ubuntu22.04/usr/bin" >> "$GITHUB_PATH"
+
+      - name: Swift version
+        run: swift --version
 
       - name: Build release binary
         shell: bash
