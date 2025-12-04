@@ -1,0 +1,64 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Swift
+        uses: swift-actions/setup-swift@v1
+        with:
+          swift-version: '5.8'
+
+      - name: Build release binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            swift build -c release --arch arm64 --arch x86_64
+            BIN_PATH=.build/apple/Products/Release/dincheck
+            ARCHIVE_NAME=dincheck-macos-universal.tar.gz
+          else
+            swift build -c release
+            BIN_PATH=.build/release/dincheck
+            ARCHIVE_NAME=dincheck-linux-x86_64.tar.gz
+          fi
+
+          mkdir -p artifacts
+          cp "$BIN_PATH" artifacts/dincheck
+          chmod +x artifacts/dincheck
+          tar -C artifacts -czf "$ARCHIVE_NAME" dincheck
+
+          if command -v shasum >/dev/null 2>&1; then
+            shasum -a 256 "$ARCHIVE_NAME" > "$ARCHIVE_NAME.sha256"
+          else
+            sha256sum "$ARCHIVE_NAME" > "$ARCHIVE_NAME.sha256"
+          fi
+
+          mv "$ARCHIVE_NAME" "$ARCHIVE_NAME.sha256" artifacts/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ runner.os }}-dincheck
+          path: artifacts/*
+
+      - name: Release assets
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/*
