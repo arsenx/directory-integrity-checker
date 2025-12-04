@@ -1,7 +1,14 @@
 #!/usr/bin/env swift
 
 import Foundation
+
+#if canImport(CryptoKit)
 import CryptoKit
+typealias SHA256Hash = CryptoKit.SHA256
+#else
+import Crypto
+typealias SHA256Hash = Crypto.SHA256
+#endif
 
 let version = "1.0.0"
 let manifestFileName = ".checksums.sha256"
@@ -17,7 +24,7 @@ func sha256(forFileAt url: URL) throws -> String {
     let handle = try FileHandle(forReadingFrom: url)
     defer { try? handle.close() }
 
-    var hasher = SHA256()
+    var hasher = SHA256Hash()
 
     while true {
         let data = handle.readData(ofLength: 64 * 1024)
