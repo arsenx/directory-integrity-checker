@@ -10,8 +10,6 @@ jobs:
   build:
     name: Build (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    env:
-      SWIFT_VERSION: "5.9.2"
     strategy:
       fail-fast: false
       matrix:
@@ -27,11 +25,14 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update
-          sudo apt-get install -y clang libicu-dev libcurl4-openssl-dev libbsd-dev libatomic1 libsqlite3-dev libpython3-dev tzdata
-          SWIFT_URL="https://download.swift.org/swift-${SWIFT_VERSION}-release/ubuntu22.04/swift-${SWIFT_VERSION}-RELEASE-ubuntu22.04.tar.gz"
-          curl -fL "$SWIFT_URL" -o swift.tar.gz
-          tar xzf swift.tar.gz
-          echo "$PWD/swift-${SWIFT_VERSION}-RELEASE-ubuntu22.04/usr/bin" >> "$GITHUB_PATH"
+          sudo apt-get install -y clang libicu-dev libcurl4-openssl-dev libbsd-dev libatomic1 libsqlite3-dev libpython3-dev tzdata ca-certificates
+          curl -O https://download.swift.org/swiftly/linux/swiftly-$(uname -m).tar.gz
+          tar zxf swiftly-$(uname -m).tar.gz
+          ./swiftly init --quiet-shell-followup
+          . "${SWIFTLY_HOME_DIR:-$HOME/.local/share/swiftly}/env.sh"
+          swiftly install latest
+          swiftly use latest
+          hash -r
 
       - name: Swift version
         run: swift --version
