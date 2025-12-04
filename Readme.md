@@ -11,17 +11,17 @@ dincheck is a Swift command-line utility for long-term file integrity. It record
 - Human-readable output for monitoring or automation
 
 ## Download binaries
-Binaries are produced for macOS (universal) and Linux x86_64 via GitHub Actions. From a tagged release, download the asset that matches your OS (replace `<owner>/<repo>` with your GitHub path):
+Binaries are produced for macOS (universal) and Linux x86_64 via GitHub Actions. From a tagged release, download the asset that matches your OS:
 
 ```bash
 # macOS universal binary
-curl -L https://github.com/<owner>/<repo>/releases/download/v1.0.0/dincheck-macos-universal.tar.gz \
+curl -L https://github.com/arsenx/directory-integrity-checker/releases/download/v1.0.0/dincheck-macos-universal.tar.gz \
   | tar -xz
 chmod +x dincheck
 sudo mv dincheck /usr/local/bin
 
 # Linux x86_64 binary
-curl -L https://github.com/<owner>/<repo>/releases/download/v1.0.0/dincheck-linux-x86_64.tar.gz \
+curl -L https://github.com/arsenx/directory-integrity-checker/releases/download/v1.0.0/dincheck-linux-x86_64.tar.gz \
   | tar -xz
 chmod +x dincheck
 sudo mv dincheck /usr/local/bin
