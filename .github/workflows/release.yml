@@ -75,3 +75,56 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: artifacts/*
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          body: |
+            ## Download and Install
+            
+            Download the appropriate binary for your operating system:
+            
+            ### macOS (Universal Binary - Apple Silicon & Intel)
+            
+            ```bash
+            # Download and extract
+            curl -L https://github.com/arsenx/directory-integrity-checker/releases/download/${{ github.ref_name }}/dincheck-macos-universal.tar.gz \
+              | tar -xz
+            
+            # Make executable and move to bin directory
+            chmod +x dincheck
+            sudo mv dincheck /usr/local/bin/
+            
+            # Verify installation
+            dincheck --version
+            ```
+            
+            ### Linux (x86_64)
+            
+            ```bash
+            # Download and extract
+            curl -L https://github.com/arsenx/directory-integrity-checker/releases/download/${{ github.ref_name }}/dincheck-linux-x86_64.tar.gz \
+              | tar -xz
+            
+            # Make executable and move to bin directory
+            chmod +x dincheck
+            sudo mv dincheck /usr/local/bin/
+            
+            # Verify installation
+            dincheck --version
+            ```
+            
+            ### Verify Download Integrity
+            
+            Each release includes SHA-256 checksums. Download the corresponding `.sha256` file and verify:
+            
+            ```bash
+            # macOS
+            shasum -a 256 -c dincheck-macos-universal.tar.gz.sha256
+            
+            # Linux
+            sha256sum -c dincheck-linux-x86_64.tar.gz.sha256
+            ```
+            
+            ## What's New
+            
+            See the automatically generated release notes below for changes in this version.
