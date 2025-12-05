@@ -10,7 +10,7 @@ import Crypto
 typealias SHA256Hash = Crypto.SHA256
 #endif
 
-let version = "1.0.0"
+let version = "1.0.1"
 let manifestFileName = ".checksums.sha256"
 
 struct ManifestEntry {
