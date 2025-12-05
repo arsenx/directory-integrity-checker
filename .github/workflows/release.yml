@@ -6,6 +6,9 @@ on:
     tags: [ 'v*' ]
   pull_request:
 
+permissions:
+  contents: write
+
 env:
   SWIFT_VERSION: "6.0.2"
 
