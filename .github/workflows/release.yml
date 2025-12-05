@@ -6,6 +6,9 @@ on:
     tags: [ 'v*' ]
   pull_request:
 
+env:
+  SWIFT_VERSION: "6.0.2"
+
 jobs:
   build:
     name: Build (${{ matrix.os }})
@@ -19,6 +22,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Cache Swift (Linux)
+        if: runner.os == 'Linux'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.local/share/swiftly
+            ~/.swiftly
+          key: ${{ runner.os }}-swift-${{ env.SWIFT_VERSION }}
+
       - name: Install Swift (Linux)
         if: runner.os == 'Linux'
         shell: bash
@@ -30,12 +42,35 @@ jobs:
           tar zxf swiftly-$(uname -m).tar.gz
           ./swiftly init --quiet-shell-followup
           . "${SWIFTLY_HOME_DIR:-$HOME/.local/share/swiftly}/env.sh"
-          swiftly install latest
-          swiftly use latest
+          swiftly install ${{ env.SWIFT_VERSION }}
+          swiftly use ${{ env.SWIFT_VERSION }}
           hash -r
 
       - name: Swift version
         run: swift --version
+
+      - name: Cache Swift build
+        uses: actions/cache@v4
+        with:
+          path: .build
+          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      - name: Verify version consistency
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          TAG_VERSION=${GITHUB_REF#refs/tags/v}
+          CODE_VERSION=$(grep 'let version = ' Sources/dincheck/main.swift | sed 's/.*"\(.*\)".*/\1/')
+
+          if [ "$TAG_VERSION" != "$CODE_VERSION" ]; then
+            echo "❌ Version mismatch!"
+            echo "Git tag: v$TAG_VERSION"
+            echo "Code:    $CODE_VERSION"
+            exit 1
+          fi
+
+          echo "✅ Version consistency verified: $TAG_VERSION"
 
       - name: Build release binary
         shell: bash
@@ -54,6 +89,10 @@ jobs:
           mkdir -p artifacts
           cp "$BIN_PATH" artifacts/dincheck
           chmod +x artifacts/dincheck
+
+          # Strip binary to reduce size
+          strip artifacts/dincheck
+
           tar -C artifacts -czf "$ARCHIVE_NAME" dincheck
 
           if command -v shasum >/dev/null 2>&1; then
@@ -63,6 +102,33 @@ jobs:
           fi
 
           mv "$ARCHIVE_NAME" "$ARCHIVE_NAME.sha256" artifacts/
+
+      - name: Verify binary
+        run: |
+          echo "Testing binary..."
+          artifacts/dincheck --version
+          artifacts/dincheck --help
+
+          # Functional smoke test
+          mkdir -p /tmp/test-dir
+          echo "test content" > /tmp/test-dir/test.txt
+          artifacts/dincheck create /tmp/test-dir
+          artifacts/dincheck verify /tmp/test-dir
+
+          echo "✅ Binary verification passed"
+
+      - name: Validate checksums
+        run: |
+          cd artifacts
+          for checksum_file in *.sha256; do
+            echo "Validating $checksum_file"
+            if command -v shasum >/dev/null 2>&1; then
+              shasum -a 256 -c "$checksum_file"
+            else
+              sha256sum -c "$checksum_file"
+            fi
+          done
+          echo "✅ All checksums valid"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
