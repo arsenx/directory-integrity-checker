@@ -134,7 +134,7 @@ jobs:
           echo "✅ All checksums valid"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ runner.os }}-dincheck
           path: artifacts/*
